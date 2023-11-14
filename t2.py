@@ -301,7 +301,7 @@ print(f"Nós que não contém arestas entre si: {cfg_no_inicial} e {troca_proibi
 
 
 #------------------------------------------------------ Tarefa 2 ----------------------------------------------------------
-camadas="" # adicional para a Tarefa 3
+qtd_camadas="" # adicional para a Tarefa 3
 mais_distantes=[] # adicional para a Tarefa 3
 num_componentes=0
 
