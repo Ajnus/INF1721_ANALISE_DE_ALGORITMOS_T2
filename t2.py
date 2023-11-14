@@ -305,27 +305,31 @@ camadas="" # adicional para a Tarefa 3
 mais_distantes=[] # adicional para a Tarefa 3
 num_componentes=0
 
-def BFS(grafo, no_inicial, visitados):
+def BFS(grafo, no_inicial, visitados, do_print):
     global num_arestas
     global mais_distantes
-    global camadas
+    global qtd_camadas
 
     L=[]
     L.append([no_inicial])
 
-    print(f"\nNó inicial: {no_inicial}\n---")
+    if do_print == True:
+        print(f"\nNó inicial: {no_inicial}\n---")
 
     visitados[no_inicial] = True
     pai = {no_inicial: None}
-    print("\n", end="")
+    if do_print == True:
+        print("\n", end="")
 
     i=1
     while i <= len(L):    # quantidade de camadas nunca vai ultrapassar a quantidade de nós
-        print(f"\ni: {i}")
+        if do_print == True:
+            print(f"\ni: {i}")
 
         L.append([])
         #L[i]   # level i
-        print(f"L: {L}\n")
+        if do_print == True:
+            print(f"L: {L}\n")
 
         for u in L[i-1]:
             u_neighbors = get_neighbors(get_cfg(int(u)))
@@ -343,9 +347,10 @@ def BFS(grafo, no_inicial, visitados):
                     visitados[vizinho_u] = True
 
         if L[i]==[]:
-            print(f"Camadas: {i}")
-            camadas = i
-            mais_distantes = L[i-1]
+            qtd_camadas = i-1
+            if do_print == True:
+                print(f"Camadas: {qtd_camadas}")
+            mais_distantes = L[i-1] # adicional para a Tarefa 3, pega os nós da camada anterior
             return
         
         i+=1
@@ -359,7 +364,7 @@ def BFS_componentes(grafo):
     for s in grafo:
         #print(f"s: {s}")
         if not visitados[s]:
-            BFS(grafo, s, visitados)
+            BFS(grafo, s, visitados, True)
             num_componentes+=1
 
             #print(f"\nTotal de nós visitados no momento da iteração {num_componentes}:")
@@ -379,11 +384,14 @@ num_arestas=0
 visitados = {node: False for node in H_Inversa}
 BFS_componentes(H_Inversa) #  utilizada pois é a de item node_number:cfg
 print(f"\nO numero de arestas do grafo é: {num_arestas}")
-print(f"\nOs mais distantes são: {mais_distantes}")
+print(f"\nO u dos nós mais distantes do são: {mais_distantes}")
 
 
 #------------------------------------------------------ Tarefa 3 ----------------------------------------------------------
 
+cfg_no_final = [1, 2, 3, 4, 5, 6, 7, 8, 0]
+
+"""
 def BFS_com_caminho(grafo, s, target):
     visitados = set()
     queue = [(s, [s])]
@@ -404,48 +412,14 @@ def BFS_com_caminho(grafo, s, target):
                     queue.append((vizinho, caminho + [vizinho]))
     return []
 
-def BFS_visitados(grafo, no_inicial):
-    visitados = set()
-    queue = deque([no_inicial])
-    visitados.add(no_inicial)
-
-    while queue:
-        no_atual = queue.popleft()
-        vizinhos = node_neighbors.get(int(no_atual), [])
-        for vizinho in vizinhos:
-            if vizinho not in visitados:
-                visitados.add(vizinho)
-                queue.append(vizinho)
-    
-    print(visitados)
-    return list(visitados)
-
-
-cfg_no_final = [1, 2, 3, 4, 5, 6, 7, 8, 0]
-
-# Acha o componente conexo que contém a configuração final cfg*
-cconexa = []
-cconexa.append(BFS_visitados(grafo, get_u(cfg_no_final)))
-
-
-#for no in grafo:
-#    caminho = BFS_com_caminho(grafo, no, get_u(cfg_no_final))
-#    if caminho:
-#        print("FOI")
-#        cconexa.append(caminho)
-
-#print(len(cconexa))
-
-# Dispara uma BFS na componente conexao que contém o nó final, a partir dele
-visitados = {node: False for node in grafo}
-BFS(cconexa, get_u(cfg_no_final), visitados)
-print(len(cconexa))
+for s in grafo:
+    BFS_com_caminho(H_Inversa, s, get_u(cfg_no_final))
+"""
 
 # Respostas
-print("\nPossibilidades equidistantes de configuração inicial viável mais difícil de alcançar:")
+visitados = {node: False for node in H_Inversa}
+BFS(H_Inversa, get_u(cfg_no_final), visitados, False) # alternativa mais simples, seta mais_distantes do nó final
+print("\nPossibilidades equidistantes de configuração inicial viável mais difícil de alcançar (configuração dos nós acima):")
 for md in mais_distantes:
     print(get_cfg(md))
-print("Quantidade de movimentos necessários:", camadas//num_componentes)
-#print(len(cconexa))
-#print(cconexa)
-#print(len(grafo))
+print("Quantidade de movimentos necessários:", qtd_camadas)
