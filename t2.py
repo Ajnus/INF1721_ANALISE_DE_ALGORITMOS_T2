@@ -2,6 +2,9 @@ import random
 import math
 import itertools
 import networkx as nx
+from collections import deque
+
+
 
 #------------------------------------------------------ Tarefa 1 ----------------------------------------------------------
 
@@ -22,28 +25,17 @@ def unhash_cfg(hash_cfg):
 H = {}
 
 # "que dada configuração cfg, "H[cfg]" retorna o número do nó relativo a essa configuração"
-def get_u( cfg):
-    #print(f"[GET_U]cfg: {cfg}")
+def get_u(cfg):
+    return H.get(hash_cfg(cfg), None)
 
-    for u in H:
-        #print(f"u, config: {u}, {cfg}")
-        if 'config' in H[u]:
-            #config = H[u]['config']
-            #print(f"H[u]: {u}")
-            if hash_cfg(cfg) == H[u]['config']:
-                return u
-
-    #print(f"H[6]['config']: {H[6]['config']}")
-    #print(f"{hash_cfg(cfg)} != {H[6]['config']}")
-    return None
-
+# " nó:config, que será usada na BFS
+H_Inversa = {}
 
 # "um vetor C" 
 C = []
 
 # "que dado o número u de um nó, C[u] retorna a configuração correspondente a esse nó"
 def get_cfg(u):
-    #print(f"u: {u} type(u): {type(u)}")
     cfg = C[u]
     if cfg is not None:
         return [int(x) for x in cfg]
@@ -52,18 +44,26 @@ def get_cfg(u):
     
 
 # adiciona um nó com dada configuração ao grafo
-def add_no(u, cfg):
-    H[u] = {'config': hash_cfg(cfg), 'vizinhos': []}
-    print(f"    Nó {u} adicionado à tabela, com configuração {H[u]['config']}    ", end="")
+def add_no(cfg, u):
+    H[cfg] = u
+    H_Inversa[u] = hash_cfg(cfg) # print adicional desnecessário
+    print(f"    Item (Configuração:Nó) '{cfg}':{u} adicionado à tabela H.    ", end="")
+
+# Dicionário para armazenar os vizinhos de cada nó
+node_neighbors = {}
 
 # adiciona um nó com dada configuração ao grafo
 def add_vizinhos(u, vizinho):
-    if 'vizinhos' not in H[u]:
-        H[u]['vizinhos'] = []
+    if u not in node_neighbors:
+        node_neighbors[u] = []
+    
+    if isinstance(vizinho, list):
+        node_neighbors[u].extend(vizinho)
+        #print(f"Arestas ({u},{vizinho}) serão adicionadas")
+    else:
+        node_neighbors[u].append(vizinho)
+        #print(f"Aresta ({u},{vizinho}) será adicionada")
 
-    H[u]['vizinhos'].extend(vizinho)
-    #print(f"    Vizinho {get_u( vizinho)} adicionados à tabela, com configuração {vizinho}    ", end="")
-    print(f"aresta {u}: {get_u(vizinho)} adicionada")
 
 # Testando as funções/criando UM grafo (com random seed, demorou mais de 4 milhões de iterações para criar todos os nós. abandonada)
 cfg_numeros = [0,1,2,3,4,5,6,7,8]
@@ -82,61 +82,11 @@ print(f"grafo.number_of_nodes: {grafo.number_of_nodes()}")
 # Obter o primeiro nó do grafo
 not_cfg_no_inicial = list(grafo.nodes)[0]
 
-
 # Obter a configuração do primeiro nó
 lstr_cfg_no_inicial = list(grafo.nodes[not_cfg_no_inicial]["config"])
 cfg_no_inicial = [int(x) for x in lstr_cfg_no_inicial]
 
-print(f"AQUI: {cfg_no_inicial} {type(cfg_no_inicial)} {cfg_no_inicial[0]} {type(cfg_no_inicial[0])}")
-
-# Imprimir a configuração do primeiro nó
-#print("Configuração do primeiro nó:")
-#for attribute, value in cfg_no_inicial.items():
-#    print(f"{attribute}: {value}")
-
-#random.shuffle(cfg_numeros)
-#cfg_no_inicial = cfg_numeros.copy()                     # registrado para mais tarde
-#print(f"Iteração 1: ", end="")
-#add_no(0, cfg_no_inicial)                               # adiciona nó inicial à tabela H
-#C.append(cfg_no_inicial.copy())                         # adiciona cfg inicial ao vetor C
-#print(f"Nó 0: {cfg_no_inicial}")                       # imprime nó e estado/cfg, inicial
-
-#print(f"    Nós criados: {len(H)}")
-
-
-#i=1
-#j=1
-#t=0
-#while i < nos_possiveis:          # 1) um nó para cada configuração possı́vel do tabuleiro;
-#    t+=1
-#    print(f"Iteração {t+1}: ", end="")
-    #print(f"i inicial: {i}")
-    #random.shuffle(cfg_numeros)
- #   valor_hash = hash_cfg(cfg_numeros)
-
-    #print(f"len(H): {len(H)}")
-    #print(f"nos_possiveis: {nos_possiveis}")
-
-  #  if valor_hash not in H.values() and len(H) <= nos_possiveis:                    # se nó com esta configuração já não existir        
-   #     add_no(j, cfg_numeros)                          # adiciona nó à tabela H
-    #    C.append(cfg_numeros.copy())                    # adiciona cfg ao vetor C
-        #print(f"Nó {j}: {C[-1]}")                       # imprime nó e estado/cfg, poderia também ser mostrado o hash através de hash_cfg(get_cfg(j))
-     #   j+=1                                            # número real de configurações/nós
-
-    #else:
-     #   existing_node = [u for u, cfg in H.items() if cfg == valor_hash][0]         # determina em que Nó a configuração já existe
-      #  print(f"    {valor_hash}: configuração já existe no Nó {existing_node}           ", end="")  # imprimindo logo em seguida
-        #print(f"i: {i}")
-       # i-=1                                                                       # garante que TODOS os nós possíveis sejam criados
-        #print(f"i depois de i--: {i}")
-    
-    #print(f"    Nós criados: {len(H)}")
-    #i+=1
-
-
-#print (f"\nTotal de {j} nós no grafo.")
-#print(f"Total de {t+1} iterações para criar todos os seus nós.\n")
-
+#print(f"AQUI: {hash_cfg(cfg_no_inicial)} {type(cfg_no_inicial)} {cfg_no_inicial[0]} {type(cfg_no_inicial[0])}")
 
 # Criando nós em tempo linear
 #perm = list(itertools.permutations(cfg_no_inicial, len(cfg_no_inicial)))
@@ -144,39 +94,47 @@ print(f"AQUI: {cfg_no_inicial} {type(cfg_no_inicial)} {cfg_no_inicial[0]} {type(
 #node_numbers = []
 #nodes_configurations=[]
 
-for node in grafo.nodes:
-    print("start")
+#print(grafo.nodes)
+
+for node_id in grafo.nodes():
+    print("     ")
+    #print(f"node: {node_id} type(node): {type(node_id)}")
     # Obter o número do nó
-    node_number = int(node)
-
-    if node_number == 362879:
-        # Obter a configuração do nó
-        configuration = grafo.nodes[node]["config"]
-
-        # adiciona nó com sua configuração à tabela H
-        add_no(node_number, configuration)
-
-        # Adicionar a configuração à lista configurations
-        C.append(configuration)
-        break
+    node_number = int(node_id)
 
     # Obter a configuração do nó
-    configuration = grafo.nodes[node]["config"]
+    configuration = grafo.nodes[node_id]["config"]
+
+    # adiciona configuração com seu respectivo nó à tabela H
+    add_no(configuration, node_number)
+
+    # Adicionar a configuração à lista configurations
+    C.append(configuration)
+    
+"""
+t=0
+for c in perm:
+    print(f"c: {c} type(c): {type(c)}")
+    print("start")
+
+    # Obter o número do nó
+    node_number = perm.index(c)
+
+    print(c)
+
+    # Obter a configuração do nó
+    configuration = list(c)
 
     # # adiciona nó com sua configuração à tabela H
     add_no(node_number, configuration)
 
     # Adicionar a configuração à lista configurations
     C.append(configuration)
-    
 
-#t=0
-#for c in perm:
-
-#    C.append(c)
-#    if t%2!=0:
-#        print("\n")
-#    t+=1
+    #if t%2!=0:
+    #    print(" ")
+    #t+=1
+"""
 
 
 
@@ -189,35 +147,144 @@ for node in grafo.nodes:
 
 # Desta forma para determinar as arestas existentes precisamos a partir de todos os nós possíveis gerados no grafo filtrar os antigíveis e não atingíveis a partir do nó inicial.
 
+
+
 # Retorna lista com estados vizinhos de um dado estado
 def get_neighbors(config):
+    config_ = [int(x) for x in config]  # Converter a configuração para uma lista de inteiros
     neighbors_config = []
-    casa_vazia = config.index(0)                                # pega a posição da casa vazia
+    casa_vazia = config_.index(0)                                # pega a posição da casa vazia
     
+    """
+    nova solução mais eficiente mas não o bastante, abandonada
+    if casa_vazia == 0:
+        neighbor = list(config)
+        neighbor2 = list(config)
 
-    if casa_vazia >= 3:                                         # Peça pra baixo se possível
-        # peça 'troca de posição' com casa vazia
-        neighbor = list(config)
-        neighbor[casa_vazia], neighbor[casa_vazia-3] = neighbor[casa_vazia-3], neighbor[casa_vazia]
-        neighbors_config.append(neighbor)                       # adiciona nó/estado vizinho
+        neighbor[0], neighbor[1] = neighbor[1], neighbor[0]
+        neighbors_config.append(neighbor)
 
-    if casa_vazia <= 5:                                         # Peça pra cima se possível
+        neighbor2[0], neighbor2[4] = neighbor2[4], neighbor2[0]
+        neighbors_config.append(neighbor2)  
+
+    elif casa_vazia == 1:
         neighbor = list(config)
-        neighbor[casa_vazia], neighbor[casa_vazia+3] = neighbor[casa_vazia+3], neighbor[casa_vazia]
+        neighbor2 = list(config)
+        neighbor3 = list(config)
+
+        neighbor[1], neighbor[0] = neighbor[0], neighbor[1]
         neighbors_config.append(neighbor)
-    
-    if casa_vazia != 2 and casa_vazia != 5 and casa_vazia != 8:   # Peça pra esquerda se possível
+
+        neighbor2[1], neighbor2[2] = neighbor2[2], neighbor2[1]
+        neighbors_config.append(neighbor2)
+
+        neighbor3[1], neighbor3[4] = neighbor3[4], neighbor3[1]
+        neighbors_config.append(neighbor3)
+
+    elif casa_vazia == 2:
         neighbor = list(config)
-        neighbor[casa_vazia], neighbor[casa_vazia+1] = neighbor[casa_vazia+1], neighbor[casa_vazia]
+        neighbor2 = list(config)
+
+        neighbor[2], neighbor[1] = neighbor[1], neighbor[2]
         neighbors_config.append(neighbor)
-    
-    if casa_vazia != 0 and casa_vazia != 3 and casa_vazia != 6:   # Peça pra direita se possível
+
+        neighbor2[2], neighbor2[5] = neighbor2[5], neighbor2[2]
+        neighbors_config.append(neighbor2)
+
+    elif casa_vazia == 3:
         neighbor = list(config)
-        neighbor[casa_vazia], neighbor[casa_vazia-1] = neighbor[casa_vazia-1], neighbor[casa_vazia]
+        neighbor2 = list(config)
+        neighbor3 = list(config)
+
+        neighbor[3], neighbor[0] = neighbor[0], neighbor[3]
+        neighbors_config.append(neighbor)
+
+        neighbor2[3], neighbor2[4] = neighbor2[4], neighbor2[3]
+        neighbors_config.append(neighbor2)  
+
+        neighbor3[3], neighbor3[6] = neighbor3[6], neighbor3[3]
+        neighbors_config.append(neighbor3)  
+
+    elif casa_vazia == 4:
+        neighbor = list(config)
+        neighbor2 = list(config)
+        neighbor3 = list(config)
+        neighbor4 = list(config)
+
+        neighbor[4], neighbor[1] = neighbor[1], neighbor[4]
+        neighbors_config.append(neighbor)
+
+        neighbor2[4], neighbor2[3] = neighbor2[3], neighbor2[4]
+        neighbors_config.append(neighbor2)
+
+        neighbor3[4], neighbor3[7] = neighbor3[7], neighbor3[4]
+        neighbors_config.append(neighbor3)
+
+        neighbor4[4], neighbor4[5] = neighbor4[5], neighbor4[4]
+        neighbors_config.append(neighbor4)
+
+    elif casa_vazia == 5:
+        neighbor = list(config)
+        neighbor2 = list(config)
+        neighbor3 = list(config)
+
+        neighbor[5], neighbor[2] = neighbor[2], neighbor[5]
+        neighbors_config.append(neighbor)
+
+        neighbor2[5], neighbor2[4] = neighbor2[4], neighbor2[5]
+        neighbors_config.append(neighbor2)
+
+        neighbor3[5], neighbor3[8] = neighbor3[8], neighbor3[5]
+        neighbors_config.append(neighbor3)
+
+    elif casa_vazia == 6:
+        neighbor = list(config)
+        neighbor2 = list(config)
+
+        neighbor[6], neighbor[3] = neighbor[3], neighbor[6]
+        neighbors_config.append(neighbor)
+
+        neighbor2[6], neighbor2[7] = neighbor2[7], neighbor2[6]
+        neighbors_config.append(neighbor2)
+
+    elif casa_vazia == 7:
+        neighbor = list(config)
+        neighbor2 = list(config)
+        neighbor3 = list(config)
+
+        neighbor[7], neighbor[6] = neighbor[6], neighbor[7]
+        neighbors_config.append(neighbor)
+
+        neighbor2[7], neighbor2[4] = neighbor2[4], neighbor2[7]
+        neighbors_config.append(neighbor2)  
+
+        neighbor3[7], neighbor3[8] = neighbor3[8], neighbor3[7]
+        neighbors_config.append(neighbor3)
+
+    elif casa_vazia == 8:
+        neighbor = list(config)
+        neighbor2 = list(config)
+
+        neighbor[8], neighbor[7] = neighbor[7], neighbor[8]
+        neighbors_config.append(neighbor)
+
+        neighbor2[8], neighbor2[5] = neighbor2[5], neighbor2[8]
+        neighbors_config.append(neighbor2)  
+    
+    neighbors = []"""
+
+    # Define as posições válidas para a casa vazia trocar de lugar
+    valid_swaps = {0: [1, 3], 1: [0, 2, 4], 2: [1, 5], 3: [0, 4, 6], 4: [1, 3, 5, 7], 5: [2, 4, 8], 6: [3, 7], 7: [4, 6, 8], 8: [5, 7]}
+
+    # Gera os vizinhos trocando a casa vazia com peças adjacentes
+    for neighbor_index in valid_swaps[casa_vazia]:
+        neighbor = config_.copy()  # Cria uma cópia da configuração atual
+        neighbor[casa_vazia], neighbor[neighbor_index] = neighbor[neighbor_index], neighbor[casa_vazia]
         neighbors_config.append(neighbor)
 
     return neighbors_config
 
+# efetua uma troca entre peças, o que é proibido no jogo logo estados não conectados por arestas
 def troca_proibida(config):
     casa_preenchida1 = config.index(5) 
     casa_preenchida2 = config.index(4) 
@@ -227,155 +294,66 @@ def troca_proibida(config):
 
     return config_proibida
 
-#print(f"Tabela H:\nH[6]['config'] : {H[6]['config']}")
 
-#num_arestas=0
-
-#for u in H:
-    #print(f"{H[u]['config']}")
-#    cfg = (H[u]['config'])
-#    cfg_vizinhos = get_neighbors(unhash_cfg(cfg))
-#    print(f"\n\nNó {u}: {unhash_cfg(cfg)}\nSeus nós vizinhos (conectados por uma aresta): {cfg_vizinhos}")
-#    for cfg_vizinho in cfg_vizinhos:
-        #print(f"cfg_vizinho: {cfg_vizinho}, type {type(cfg_vizinho[0])}")
-#        print(f"{get_u(cfg_vizinho)}, ", end="")
-#        no_vizinhos.add(get_u( hash_cfg(cfg_vizinho)))
-#        print("")
-
-#    for cfg_vizinho in cfg_vizinhos:
-        #print(f"cfg_vizinho: {cfg_vizinho}")
-        # Verifica se a chave já existe na tabela hash
-#        if u in H:
-            # Se a chave existir, adiciona o vizinho à lista de vizinhos do nó
-#            add_vizinhos(u, cfg_vizinho)
-
-#            num_arestas+=1
-        #else:
-            # Se a chave não existir, cria uma nova lista com o valor e atribui à chave
-            #H[u] = [cfg_vizinho]
-            #print(f"aresta {u}: {get_u( cfg_vizinho)} criada")
-
-
-
-#file_path = "/home/puc/Documentos/PUC-Rio/INF1721 - Analise de Algoritmos/Trabalho 2/sem vizinhos.txt"
-#elements = []
-
-#with open(file_path, "r") as file:
-    #for line in file:
-        #values = line.split()  # Separa os valores da linha
-        #values = [int(value.replace(",", "").replace("[", "").replace("]", "")) for value in values]  # Remove as vírgulas dos valores
-        #vector = [int(value) for value in values]  # Converte os valores para inteiros
-        #elements.append(values)  # Adiciona os valores ao vetor 'elements'
-        
-#print(f"sem vizinhos: {elements} {type(elements[0][0])}")
-
-# Criar um iterador com os valores de H a partir do nó 143833
-#it = itertools.islice(elements, 0, 460)
-
-# Adicionar arestas entre todos os vizinhos
-#for no_config in it:
-    #print (get_u( no_config))
-    #if get_u( no_config) < 142822:
-    #    continue
-
-
-#    no_vizinhos = set()
-    
-#    print (f"\n\nNó {get_u( no_config)}: {unhash_cfg(no_config)}")
-#    cfg_vizinhos = get_neighbors((unhash_cfg(no_config)))  # Encontrar configs dos vizinhos do nó
-#    print(f"Vizinhos: {cfg_vizinhos}")
-#    for cfg_vizinho in cfg_vizinhos:
-#        print(f"{get_u( cfg_vizinho)}, ", end="")
-#        no_vizinhos.add(get_u( hash_cfg(cfg_vizinho)))
-#        print("")
-
-    #for no_vizinho in no_vizinhos:
-                #if not grafo.has_edge(get_u( no_config), no_vizinho):  # Verifica se a aresta já existe
-                #if not (str(no_vizinho) in H[get_u( no_config)]):
-                    #print(f"get_u( no_config), no_vizinho: {get_u( no_config)}, {no_vizinho}")
-                    #grafo.add_edge(get_u( no_config), no_vizinho)      # Traça aresta entre os vizinhos
-                    #H[get_u( no_config)].append(no_vizinho)
-                    #num_arestas+=1
-                    #nx.write_graphml(grafo, "/home/puc/Documentos/PUC-Rio/INF1721 - Analise de Algoritmos/Trabalho 2/grafo.graphml") # Salvar as alterações no arquivo GraphML
-                    #print(f"aresta {get_u( no_config), no_vizinho} salva")
-        
-#nx.write_graphml(grafo, "/home/puc/Documentos/PUC-Rio/INF1721 - Analise de Algoritmos/Trabalho 2/grafo.graphml") # Salvar as alterações no arquivo GraphML
-
-#print(f"\nO numero de arestas do grafo é: {num_arestas}")
-print(f"\nNó 0 inicial: {cfg_no_inicial}\nSeus nós vizinhos (contém arestas entre si): {get_neighbors(cfg_no_inicial)}")
+print(f"\nNó 0 inicial: {hash_cfg(cfg_no_inicial)}\nSeus nós vizinhos (contém arestas entre si): {get_neighbors(hash_cfg(cfg_no_inicial))}")
 print(f"Nós que não contém arestas entre si: {cfg_no_inicial} e {troca_proibida(cfg_no_inicial)}")
 
 
-# Carregar o grafo a partir do arquivo GraphML
-# Go = nx.read_graphml("meu_grafo.graphml")
-
-# Exibir informações sobre o grafo
-#for u, v in Go.edges():
-#    print(f"Aresta: {u} - {v}")
-
-#print("Número de nós:", Go.number_of_nodes())
-#print("Número de arestas:", Go.number_of_edges())
-
 
 #------------------------------------------------------ Tarefa 2 ----------------------------------------------------------
+camadas="" # adicional para a Tarefa 3
+mais_distantes=[] # adicional para a Tarefa 3
+num_componentes=0
 
 def BFS(grafo, no_inicial, visitados):
     global num_arestas
-    #L=[None]*nos_possiveis           # quantidade de camadas nunca vai ultrapassar a quantidade de nós
-    #print(f"L size: {len(L)}")
+    global mais_distantes
+    global camadas
+
     L=[]
     L.append([no_inicial])
-    #print(f"\n\nL: {L}\n")
-    #print(f"L size: {len(L)}")
-    print(f"\nNó inicial: {no_inicial}")
-    #print(f"visitados? {visitados}")
+
+    print(f"\nNó inicial: {no_inicial}\n---")
+
     visitados[no_inicial] = True
     pai = {no_inicial: None}
     print("\n", end="")
 
     i=1
     while i <= len(L):    # quantidade de camadas nunca vai ultrapassar a quantidade de nós
-        print(f"i: {i}")
-        #print(f"nos_possiveis: {nos_possiveis}")
+        print(f"\ni: {i}")
+
         L.append([])
         #L[i]   # level i
-        print(f"L: {L}")
-        #   print(f"L[{i}] = {L[i]}")
+        print(f"L: {L}\n")
+
         for u in L[i-1]:
-            #print(f"L[{i-1}]: {L[i-1]} ({type(L[i-1])})")
-            #print(f"for u in L[i-1]:\n      u: {u} ({type(u)})")
-            #print(f"int(u): {int(u)}")
-            #print(f"get_cfg(int(u)): {get_cfg(int(u))}  ({get_cfg(int(type(u)))})")
             u_neighbors = get_neighbors(get_cfg(int(u)))
-            #print(f"{u}_neighbors: {u_neighbors}")
+            
             
             for vizinho_cfg in u_neighbors:
-                #print(f"visitados: {visitados}")    
-                #print(f"vizinho_cfg: {vizinho_cfg}")
                 vizinho_u = get_u(vizinho_cfg)
-                #print(f"vizinho_u: {vizinho_u}")
-                if visitados[vizinho_u] == False:
-                    #print(f"vizinho: {vizinho_u}")
-                    #print(f"L[{i}] = {L[i]}")
+                if vizinho_u not in visitados or not visitados[vizinho_u]:
+
                     L[i].append(vizinho_u)
+                    add_vizinhos(u, vizinho_u) # adicional para a Tarefa 3
                     num_arestas+=1
-                    #print(f"L: {L}")
-                    #print(f"int(get_u( vizinho)): {int(get_u( vizinho))}")
+
                     pai[vizinho_u] = u
                     visitados[vizinho_u] = True
-                    #print(f"visitados[tuple(vizinho)]: {visitados[get_u( vizinho)]}")
 
-            #print("saiu")
         if L[i]==[]:
-            #print(f"L[{i}] = {L[i]}")
-            #print("agora saiu memo")
+            print(f"Camadas: {i}")
+            camadas = i
+            mais_distantes = L[i-1]
             return
+        
         i+=1
 
 
 def BFS_componentes(grafo):
     visitados = {node: False for node in grafo}
-    num_componentes=0
+    global num_componentes
 
     print("\n", end="")
     for s in grafo:
@@ -384,27 +362,25 @@ def BFS_componentes(grafo):
             BFS(grafo, s, visitados)
             num_componentes+=1
 
-                
-            print(f"\nTotal de nós visitados no momento da iteração {num_componentes}:")
+            #print(f"\nTotal de nós visitados no momento da iteração {num_componentes}:")
             k=0
             for s in grafo:
                 
                 if visitados[s] == True:
                     k+=1
-                    print(f"{s}, ", end="")  
+                    #print(f"{s}, ", end="")  
             print(f"\n\nQuantidade total de nós visitados no momento da iteração {num_componentes}: {k}\n---")
 
-            
-
-    
     print("\nQuantidade total de componentes conexas:", num_componentes)
 
 
 
 num_arestas=0
-visitados = {node: False for node in H}
-BFS_componentes(H)
+visitados = {node: False for node in H_Inversa}
+BFS_componentes(H_Inversa) #  utilizada pois é a de item node_number:cfg
 print(f"\nO numero de arestas do grafo é: {num_arestas}")
+print(f"\nOs mais distantes são: {mais_distantes}")
+
 
 #------------------------------------------------------ Tarefa 3 ----------------------------------------------------------
 
@@ -413,37 +389,63 @@ def BFS_com_caminho(grafo, s, target):
     queue = [(s, [s])]
     while queue:
         (no_atual, caminho) = queue.pop(0)
+        print(f"no_atual: {no_atual}, target: {target}")
+
         if no_atual == target:
+            print(f"no_atual == target! {no_atual} == {target} | caminho: {caminho}")
             return caminho
+        
         if no_atual not in visitados:
             visitados.add(no_atual)
-            vizinhos = grafo[no_atual]
+            vizinhos = node_neighbors.get(int(no_atual), [])
+            #print(f"no_atual: {no_atual}, target: {target}, caminho: {caminho}, vizinhos: {vizinhos}")
             for vizinho in vizinhos:
                 if vizinho not in visitados:
                     queue.append((vizinho, caminho + [vizinho]))
     return []
 
+def BFS_visitados(grafo, no_inicial):
+    visitados = set()
+    queue = deque([no_inicial])
+    visitados.add(no_inicial)
+
+    while queue:
+        no_atual = queue.popleft()
+        vizinhos = node_neighbors.get(int(no_atual), [])
+        for vizinho in vizinhos:
+            if vizinho not in visitados:
+                visitados.add(vizinho)
+                queue.append(vizinho)
+    
+    print(visitados)
+    return list(visitados)
+
+
 cfg_no_final = [1, 2, 3, 4, 5, 6, 7, 8, 0]
 
 # Acha o componente conexo que contém a configuração final cfg*
 cconexa = []
-for no in grafo:
-    if BFS_com_caminho(grafo, no, cfg_no_final):
-        cconexa.append(no)
-
-# Acha a configuração inicial viável que necessita do maior número de movimentos
-max_moves = 0
-max_moves_config = None
-
-for config in cconexa:
-    caminho = BFS_com_caminho(grafo, cfg_no_final, config)
-    if len(caminho) > max_moves:
-        max_moves = len(caminho)
-        max_moves_config = config
-
-print("Configuração inicial viável mais difícil de alcançar:", max_moves_config)
-print("Quantidade de movimentos necessários:", max_moves)
+cconexa.append(BFS_visitados(grafo, get_u(cfg_no_final)))
 
 
+#for no in grafo:
+#    caminho = BFS_com_caminho(grafo, no, get_u(cfg_no_final))
+#    if caminho:
+#        print("FOI")
+#        cconexa.append(caminho)
 
+#print(len(cconexa))
 
+# Dispara uma BFS na componente conexao que contém o nó final, a partir dele
+visitados = {node: False for node in grafo}
+BFS(cconexa, get_u(cfg_no_final), visitados)
+print(len(cconexa))
+
+# Respostas
+print("\nPossibilidades equidistantes de configuração inicial viável mais difícil de alcançar:")
+for md in mais_distantes:
+    print(get_cfg(md))
+print("Quantidade de movimentos necessários:", camadas//num_componentes)
+#print(len(cconexa))
+#print(cconexa)
+#print(len(grafo))
